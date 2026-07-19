@@ -120,37 +120,112 @@ https://naaug3v4wb4dshd4skwf6q.streamlit.app/ **<< 링크 접속**
 - **장애 대응 설계**: Neo4j·Vector DB·OpenAI 중 어느 하나가 끊기더라도 로컬 목업 데이터로 즉시 대체되어 서비스가 멈추지 않는다.
 
 ## 📂 프로젝트 구조 (Directory Structure)
-
-```text
-SKN31-3rd-3Team/
-├── streamlit_app.py             # ★ 진입점. UI 전체 + backend/services 직접 import (HTTP 없음)
-├── requirements.txt              # 루트 실행용 (streamlit + langchain + qdrant/chroma + auth)
-├── assets/                       # 인물 아바타(webp), 배경 이미지
-├── docs/                         # 아키텍처 다이어그램
-├── data/                         # bible_structured.json(커밋됨), chroma_db/·users.json(gitignore)
-├── backend/
-│   ├── .env                      # OPENAI_API_KEY, NEO4J_*, QDRANT_* (커밋 안 됨)
-│   ├── app/
-│   │   ├── core/config.py         # ★ 모델·DB·경로 설정은 전부 여기
-│   │   ├── services/
-│   │   │   ├── embeddings.py       # 임베딩 프로바이더 팩토리 (hf/openai/ollama)
-│   │   │   ├── llm.py              # LLM 프로바이더 팩토리 (openai/ollama/anthropic)
-│   │   │   ├── vector_store.py     # Vector DB (Chroma 로컬 / Qdrant Cloud 배포, graph-guided 필터)
-│   │   │   ├── graph_store.py      # Neo4j 궁합·제자·MBTI 매트릭스 조회
-│   │   │   ├── bible_books.py      # 성경 66권 전체명 ↔ 약어 매핑 (필터 안전망)
-│   │   │   ├── emotion.py          # 감정 추론 (키워드 + LLM 폴백)
-│   │   │   ├── hybrid_rag.py       # ★ 오케스트레이터 (recommend/answer/should_recommend)
-│   │   │   ├── prompts.py          # 예수님/제자 페르소나 시스템 프롬프트
-│   │   │   ├── auth.py             # 회원가입·로그인 (bcrypt + data/users.json 영속화)
-│   │   │   └── mock_data.py        # DB/API 미연결 시 폴백 데이터
-│   │   ├── api/                    # FastAPI 라우터 (레거시, Streamlit 경로에서는 미사용)
-│   │   └── main.py                 # FastAPI 진입점 (레거시)
-│   └── scripts/
-│       ├── build_vector_db.py       # 로컬 Chroma 재생성 CLI
-│       └── migrate_neo4j_to_aura.py # 로컬 Neo4j → Aura 마이그레이션
-├── README.md                     
-└── README_STREAMLIT.md           # 실행/배포 가이드 (Streamlit Cloud + Neo4j Aura + Qdrant Cloud)
 ```
+3RD_PROJECT/
+├── streamlit_app.py              # Streamlit 앱 진입점 — UI, 세션 상태, 대화 흐름 관리
+├── eval_dashboard.py             # RAGAS 평가 결과를 확인하는 대시보드 스크립트
+├── run_eden.bat                  # Windows 로컬 실행 자동화 (venv 생성 → 설치 → 실행)
+├── requirements.txt              # 루트(Streamlit) 실행 의존성
+├── bible.md                      # 주제 선정 배경 — 성경 기반 RAG의 장점 정리
+├── README.md                     # 프로젝트 메인 문서
+├── README_STREAMLIT.md           # Streamlit 배포/실행 가이드
+│
+├── .streamlit/
+│   └── config.toml               # Streamlit 테마·서버 설정
+│
+├── backend/                      # 레거시 FastAPI 백엔드 (React/앱 전환 대비 보존)
+│   ├── requirements.txt          # FastAPI 백엔드 의존성
+│   ├── requirements-eval.txt     # RAGAS 평가 전용 의존성
+│   ├── data/
+│   │   └── users.json            # 회원 정보 (로컬 테스트용, git 제외 대상)
+│   ├── scripts/
+│   │   ├── build_vector_db.py    # Vector DB(Chroma) 구축 스크립트
+│   │   ├── eval_embeddings.py    # 임베딩 모델 비교 평가
+│   │   ├── eval_ragas.py         # RAGAS 평가 실행 스크립트
+│   │   └── migrate_neo4j_to_aura.py  # Neo4j Aura 마이그레이션
+│   └── app/
+│       ├── main.py               # FastAPI 진입점 (현재 미사용, 레거시)
+│       ├── api/                  # REST API 라우터 (레거시)
+│       │   ├── auth_router.py
+│       │   ├── chat_router.py
+│       │   └── explore_router.py
+│       ├── core/
+│       │   └── config.py         # 환경설정 값 관리
+│       ├── models/
+│       │   └── schemas.py        # Pydantic 스키마
+│       └── services/             # 핵심 로직 — Streamlit 앱이 직접 import
+│           ├── hybrid_rag.py     # 그래프+벡터 하이브리드 RAG 오케스트레이터
+│           ├── vector_store.py   # Chroma/Qdrant 벡터 검색
+│           ├── graph_store.py    # Neo4j 그래프 연동 (MBTI 궁합)
+│           ├── embeddings.py     # 임베딩 프로바이더 (OpenAI 등)
+│           ├── llm.py            # LLM 프로바이더
+│           ├── emotion.py        # 감정 분석
+│           ├── prompts.py        # 예수님/12제자 페르소나 프롬프트
+│           ├── auth.py           # 회원가입/로그인 로직
+│           ├── mock_data.py      # 장애 대응 폴백 데이터
+│           └── bible_books.py    # 성경 책 이름 정규화
+│
+├── data/
+│   └── bible_structured.json     # 성경 원문 데이터 (66권 · 31,077구절)
+│
+├── docs/                         # 설계·평가 문서
+│   ├── architecture_neo4j_vectordb.svg
+│   ├── embedding_eval_report.md
+│   └── ragas_eval_results.json
+│
+├── assets/                       # 인물 페르소나 이미지 (예수님 + 12제자, 앱 내 표시용)
+│   ├── jesus.webp
+│   ├── peter.webp / andrew.webp / james.webp / john.webp
+│   ├── philip.webp / bartholomew.webp / thomas.webp / matthew.webp
+│   ├── james_alph.webp / thaddaeus.webp / simon.webp / judas.webp
+│   └── bg.webp                   # 배경 이미지
+│
+├── image/                        # README/발표 자료용 이미지 (전부 GitHub 업로드 필요)
+│   ├── Eden RAG System Architecture.png     # RAG 아키텍처 다이어그램
+│   ├── Eden Vector DB Architecture.png      # Vector DB 구조도
+│   ├── Eden Graph DB Schema.png             # Graph DB 스키마도
+│   ├── Eden Code Module Map.png             # 코드 모듈 맵
+│   ├── Eden RAGAS Evaluation Pipeline.png   # RAGAS 평가 파이프라인 다이어그램
+│   ├── Bible Data Pipeline Diagram.png      # 데이터 수집 파이프라인
+│   ├── Bible Data Preprocessing Pipeline.png # 전처리 파이프라인
+│   ├── eden_wbs.png                         # 팀 WBS(작업 분해) 차트
+│   ├── ragas_scores_v2_chart.png            # RAGAS 재평가 결과 차트
+│   ├── recall_mrr_comparison.png / recall_mrr_table.png  # 임베딩 평가 결과
+│   ├── 대화장면.png / 궁합기반점수.png / 회원인증.png     # 앱 실행 화면 스크린샷
+│   ├── Image_1~4.png                        # README/발표용 이미지
+│   └── 십자가.svg / Heart.svg                # README용 아이콘
+│
+└── 산출물/                       # 발표·제출용 산출물 (챕터별 MD + 다이어그램 PNG)
+    ├── 데이터수집.md / 데이터수집.png
+    ├── 데이터전처리.md / 데이터전처리.png
+    ├── VectorDB설계.md / VectorDB설계.png
+    ├── GraphDB설계.md / GraphDB설계.png
+    ├── RAG시스템아키텍처.md / RAG시스템아키텍처.png
+    ├── 구현코드.md / 구현코드.png
+    └── 라가스.png
+```
+
+> `.env`(API 키 등 실제 값 포함)와 `.git/`은 트리에서 제외했습니다 — `.gitignore`로 관리되거나 버전관리 자체 폴더라 GitHub에 노출되면 안 됩니다.
+
+### 정리 내역
+
+업로드해주신 압축 파일에서 실제 작동에 쓰이지 않는 아래 항목을 제거했습니다 (이미지 파일은 전부 보존).
+
+| 항목 | 이유 |
+|---|---|
+| `.venv/` (약 790MB) | 로컬 가상환경 — `requirements.txt`로 언제든 재생성 가능, 이미 `.gitignore` 대상 |
+| `__pycache__/` (3곳) | Python 컴파일 캐시 — 자동 재생성됨 |
+| `.DS_Store` (6곳) | macOS 폴더 메타데이터 — 프로젝트와 무관 |
+| `__MACOSX/` | 압축 시 생긴 macOS 전용 잔여 폴더 |
+| `backend/data/chroma_db/chroma.sqlite3` | 실제 임베딩 0건인 빈 DB 파일 — 최초 실행 시 자동 재생성 |
+| `backend/requirements 2.txt` | `requirements.txt`와 내용이 다른 중복 파일(맥 "Keep Both" 생성본으로 추정) — 실수 방지를 위해 제거 |
+
+정리 후 압축 파일 용량은 **457MB → 24.5MB**로 줄었습니다.
+
+### 참고— 확인이 필요한 부분
+
+- `backend/data/users.json`에 실제 회원 이메일 2건(해시 처리된 비밀번호 포함)이 들어 있습니다. `.gitignore`에는 이미 등록돼 있지만, 압축 파일 형태로 공유할 때는 이 파일이 함께 나가지 않도록 한 번 더 확인하시는 걸 권장합니다.
+- `.env`에도 실제 키 값이 들어 있을 가능성이 높습니다. 마찬가지로 공유 전 확인이 필요합니다.
 ## 수집한 데이터와 프로젝트의 관련성
 
 성경 기반 챗봇 시스템은 개발자에게는 "RAG, 지식 그래프, 에이전트(LangGraph) 기술을 깊이 있게 다루고 최적화할 수 있는 최고의 아키텍처 연습 공간"이 되며, 사용자에게는 "필요한 순간에 가장 알맞은 영적 가이드와 위로를 건네주는 지능형 멘토"를 제공한다는 점에서 매우 가치 있고 흥미로운 프로젝트 주제입니다.
