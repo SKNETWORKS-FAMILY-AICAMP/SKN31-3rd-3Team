@@ -1,0 +1,86 @@
+# ══════════════════════════════════════════════════
+#  Eden Project — 루트 .gitignore
+#  (프로젝트 최상단, backend/ frontend/ 와 같은 위치에 .gitignore 로 저장)
+# ══════════════════════════════════════════════════
+
+# ── 🔑 비밀키 / 환경변수 (절대 커밋 금지) ──────────
+.env
+.env.*
+!.env.example          # 예시 파일은 올림 (키 값 없는 템플릿)
+*.pem
+*.key
+secrets.json
+
+# ── 📦 대용량 데이터 (GitHub 100MB 제한 초과) ──────
+# 주의: 실제 데이터는 backend/data/ 가 아니라 루트 data/ 에 있습니다.
+# chroma_db: 152MB — 커밋 금지, 배포/최초 실행 시 bible_structured.json으로부터 자동 재생성됩니다.
+data/chroma_db/
+backend/data/chroma_db/
+# chroma_db 백업 zip
+data/chroma_db.zip
+# Qdrant 스냅샷(253MB, 현재 미사용) — 커밋 금지
+data/*.snapshot
+# 사용자 DB: 개인정보 + 자동 생성
+data/users.json
+backend/data/users.json
+# 기타 데이터
+*.zip
+*.sqlite3
+*.bin
+*.pickle
+*.pkl
+
+# 성경 원본 JSON(6.8MB)은 예외적으로 커밋합니다.
+# → 배포 시 이 파일로부터 벡터DB를 자동 재생성하기 위해 필요합니다.
+!data/bible_structured.json
+
+# ── 🐍 Python ─────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# ── ⚛️ Node / Vite ────────────────────────────────
+node_modules/
+frontend/node_modules/
+dist/
+dist-ssr/
+frontend/dist/
+.vite/
+frontend/.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# ── 🖥️ OS / 에디터 ────────────────────────────────
+.DS_Store
+__MACOSX/
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.claude/
+claude/
+
+# ── 🗂️ macOS 중복 파일 (다운로드/압축 해제 시 "Keep Both"로 생성) ──
+# 예: requirements 2.txt, streamlit_app 2.py 처럼 이름 뒤에 " 숫자"가 붙는 사본 파일
+* [0-9].py
+* [0-9].txt
+* [0-9].json
+* [0-9].md

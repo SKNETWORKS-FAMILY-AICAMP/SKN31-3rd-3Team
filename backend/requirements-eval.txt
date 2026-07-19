@@ -1,0 +1,6 @@
+# ── RAGAS 평가 전용 의존성 (backend/requirements-eval.txt) ─────────────
+# eval_ragas.py 실행에만 필요. 운영 배포용 requirements.txt에는 포함하지 않는다.
+
+ragas==0.2.15
+datasets>=2.19
+langchain-community<0.4.0

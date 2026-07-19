@@ -1,0 +1,37 @@
+# ── Streamlit 프로토타입 ────────────────────────────────
+# 1.39+ 필요: 버튼 key → .st-key-<key> CSS 클래스 (로고=홈, 메뉴 사이즈 통일에 사용)
+streamlit>=1.39
+python-dotenv>=1.0
+
+# ── 설정/검증 (백엔드 config 그대로 사용) ──────────────
+pydantic>=2.6
+pydantic-settings>=2.2
+
+# ── 인증 (회원정보 data/users.json 저장) ────────────────
+pyjwt>=2.8
+passlib>=1.7
+bcrypt>=4.0,<4.1     # passlib 1.7.x 호환을 위해 상한 고정
+
+# ── LangChain / RAG ─────────────────────────────────────
+langchain>=0.2
+langchain-core>=0.2
+langchain-community>=0.2
+langchain-openai>=0.1
+langchain-chroma>=0.1
+
+# ── Vector DB ───────────────────────────────────────────
+# chroma: 로컬/자동재생성용. qdrant: 배포판 기본(Qdrant Cloud, 미리 임베딩된
+# 스냅샷을 그대로 씀 — OpenAI API만 쓰고 무거운 로컬 모델이 없어 가볍다).
+chromadb>=0.5
+qdrant-client>=1.9
+langchain-qdrant>=0.1
+
+# ── Graph DB (Neo4j 있을 때만, 없으면 목업 폴백) ───────
+neo4j>=5.18
+
+# 참고:
+#  · langchain-huggingface / sentence-transformers 는 무겁고
+#    Streamlit Cloud 무료 티어에서 메모리 초과가 잦아 제외했습니다.
+#    HF 임베딩을 쓰려면 아래 주석을 해제하세요.
+# langchain-huggingface>=0.0.3
+# sentence-transformers>=2.6
